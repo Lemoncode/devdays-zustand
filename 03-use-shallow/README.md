@@ -1,8 +1,6 @@
 # 03 UseShallow
 
-En el ejemplo anterior, vimos una introducción a los selectores en Zustand y cómo pueden mejorar el rendimiento de nuestra aplicación.
-
-En éste, profundizaremos en su uso, y comprenderemos mejor por qué y cuándo aplicarlos correctamente.
+Vamos a profundizar en el uso de selectores.
 
 ## El ejemplo
 
@@ -58,8 +56,6 @@ export const CounterEditAliasComponent = () => {
   );
 };
 ```
-
-En este caso no hemos aplicado optimización alguna (al final del video te lo dejo cómo ejercicio, así podrás aplicar lo aprendido).
 
 Lo añadimos al barrel:
 
@@ -319,9 +315,4 @@ Tenemos que si da true, porque details es el mismo objeto en memoria.
 
 🚀 ¿Cuál es la ventaja de usar shallowEqual?
 
-Si no trabajas con inmutabilidad, para saber si un objeto ha cambiado tendrías que hacer una comparación profunda (deep comparison), revisar cada campo y entrar en los subobjetos… lo cual es mucho más costoso en términos de rendimiento.
-
-En cambio, shallowEqual solo revisa el primer nivel, lo que lo hace súper rápido.
-Así que sí, trabajar con inmutabilidad puede ser un poco tedioso… ¡pero al menos nos da esta ventaja! 😆
-
-Para terminar, volvemos al componente de edit-alias y ahora que ya sabes como funciona esto, te ánimo a que lo optimices.
+Si trabajas con inmutabilidad, es una forma muy rápida de comparar objetos, no tiene que hacer una comparación profunda de todos los campos.
