@@ -145,6 +145,112 @@ useCounter.subscribe((state) => {
 
 Y para terminar, vamos a despertar a la bicha... Zustand soporta middlewares, y como muestra... vamos a meter Zustand en las redux devtools :).
 
+Lo primero dejamos el display como estaba antes para que se vean los cambios, lo reemplazamos por la versión anterior
 
+_./src/counter-display.component.tsx_
+
+```tsx
+import { useShallow } from "zustand/shallow";
+import { useCounter } from "../stores/counter.store";
+
+export function CounterDisplay() {
+  const { id, count } = useCounter(
+    useShallow((state) => ({
+      count: state.counter.count,
+      id: state.counter.id,
+    }))
+  );
+
+  console.log(">> Rendering CounterDisplay");
+
+  return (
+    <h2>
+      {id} Current value: {count}
+    </h2>
+  );
+}
+```
+
+Vamos a nuestro store y usamos el middleware de devtools que trae Zustand.
+
+_./src/stores/counter.store.ts_
+
+```diff
+import { create } from "zustand";
+import { produce } from "immer";
++ import { devtools } from "zustand/middleware";
+
+interface Counter {
+  id: string;
+  alias: string;
+  count: number;
+}
+
+type Store = {
+  counter: Counter;
+  increment: () => void;
+  setAlias: (alias: string) => void;
+};
+
+- export const useCounter = create<Store>(
++  export const useCounter = create(
++ devtools<Store>(
+    (set) => ({
+    counter: {
+      id: "125-3434-3432",
+      alias: "Office",
+      count: 0,
+    },
+    increment: () =>
+      set(
+        produce((draft) => {
+          draft.counter.count += 1;
+        })
+      ),
+    setAlias: (alias: string) =>
+      set(
+        produce((draft) => {
+          draft.counter.alias = alias;
+        })
+      ),
+  })
++ ,{
++    name: "counter-store", // unique name
++  } )
+);
+```
+
+Si te fijas nos sale la parte de acciones como "anonymous", y esto lo podemos cambiar, en el set podemos darle el nombre de la acción.
+
+_./src/stores/counter.store.ts_
+
+```diff
+export const useCounter = create(
+  devtools<Store>(
+    (set) => ({
+      counter: {
+        id: "125-3434-3432",
+        alias: "Office",
+        count: 0,
+      },
+      increment: () =>
+        set(
+          produce((draft) => {
+            draft.counter.count += 1;
+-          })
++          }, "counter/increment")
+        ),
+      setAlias: (alias: string) =>
+        set(
+          produce((draft) => {
+            draft.counter.alias = alias;
+-          })
++          }, "counter/setAlias")
+        ),
+    }),
+    { name: "counter-store" }
+  )
+);
+```
 
 https://stackoverflow.com/questions/76929920/how-to-access-zustand-store-outside-a-functional-component

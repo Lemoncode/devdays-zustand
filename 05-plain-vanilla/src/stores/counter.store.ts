@@ -1,34 +1,43 @@
 import { create } from "zustand";
-import { produce } from "immer";
+import { devtools } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
 
-interface Counter {
-  id: string;
-  alias: string;
-  count: number;
-}
-
-type Store = {
-  counter: Counter;
+interface Store {
+  counter: {
+    id: string;
+    alias: string;
+    count: number;
+  };
   increment: () => void;
   setAlias: (alias: string) => void;
-};
+}
 
-export const useCounter = create<Store>((set) => ({
-  counter: {
-    id: "125-3434-3432",
-    alias: "Office",
-    count: 0,
-  },
-  increment: () =>
-    set(
-      produce((draft) => {
-        draft.counter.count += 1;
-      })
-    ),
-  setAlias: (alias: string) =>
-    set(
-      produce((draft) => {
-        draft.counter.alias = alias;
-      })
-    ),
-}));
+export const useCounter = create<Store>()(
+  devtools(
+    immer((set) => ({
+      counter: {
+        id: "125-3434-3432",
+        alias: "Office",
+        count: 0,
+      },
+      increment: () =>
+        set(
+          (state) => {
+            state.counter.count += 1;
+          },
+          false,
+          "counter/increment"
+        ),
+
+      setAlias: (alias) =>
+        set(
+          (state) => {
+            state.counter.alias = alias;
+          },
+          false,
+          "counter/setAlias"
+        ),
+    })),
+    { name: "counter-store" }
+  )
+);
