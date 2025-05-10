@@ -21,7 +21,7 @@ setAlias: (alias: string) => set({ alias }),
 Internamente es equivalente a:
 
 ```ts
-setAlias: (alias: string) => set({ ...state, alias }),
+setAlias: (alias: string) => set((state) => { ...state, alias }),
 ```
 
 ✅ Esto es útil cuando trabajamos con propiedades directas del estado.
@@ -71,7 +71,7 @@ export const useCounter = create<Store>((set) => ({
 En este caso, como tenemos dos niveles de anidamiento, necesitamos hacer un spread manualmente para preservar el estado anterior.
 
 ```diff
--  inc: () => set((state) => ({ count: state.count + 1 })),
+-  increment: () => set((state) => ({ count: state.count + 1 })),
 + increment: () => set((state) => ({ counter: { ...state.counter, count: state.counter.count + 1 } })),
 -  setAlias: (alias: string) => set({ alias }),
 +  setAlias: (alias: string) => set((state) => ({ counter: { ...state.counter, alias } })),
@@ -143,13 +143,189 @@ Si has trabajado con React antes, seguro sabes que usar el spread operator en ob
 
 📌 immer es una librería ligera que nos permite actualizar objetos de manera inmutable sin necesidad de usar el spread operator en cada nivel.
 
-Vamos a instalar la librería:
+Que es lo bueno, que Zustand trae un middleware que hace muy fácil integrar immer.
+
+Lo primero instalar la librería _immer_:
 
 ```bash
 npm install immer
 ```
 
-Y vamos a refactorizar el store para usarla:
+En el store nos vamos a importar el middleware de immer:
+
+_./src/stores/counter.store.ts_
+
+```diff
+import { create } from "zustand";
++ import { immer } from 'zustand/middleware/immer';
+```
+
+Y vamos a refactorizar el store para usarla, en esta caso:
+_./src/stores/counter.store.ts_
+
+```diff
+- export const useCounter = create<Store>(
++ export const useCounter = create<Store>(
++  immer(
+  (set) => ({
+  counter: {
+    id: "125-3434-3432",
+    alias: "Office",
+    count: 0,
+  },
+  increment: () =>
+    set((state) => ({
+      counter: { ...state.counter, count: state.counter.count + 1 },
+    })),
+  setAlias: (alias: string) =>
+    set((state) => ({ counter: { ...state.counter, alias } })),
+})
++ )
+);
+```
+
+Aquí tenemos dos problemas:
+
+- Uno un error de tipado (al meter el middleware immer no sacar el tipo _Store_).
+- Otro, que cuesta leer este código con tanto parentesis.
+
+Vamos a arreglaro esto:
+
+Por un lado añdimos crear el tipado del store usando la función de Zustand _createStore_:
+
+_./src/stores/counter.store.ts_
+
+```diff
+type Store = {
+  counter: Counter;
+  increment: () => void;
+  setAlias: (alias: string) => void;
+};
+
++ // StateCreator<
++ // T,            // el tipo de estado completo (tu store)
++ // M,           // la lista de middlewares aplicados
++ //  CustomSet,   // funciones personalizadas para set()
++ // >
++ type StoreCreator = StateCreator<Store, [["zustand/immer", never]], []>;
+```
+
+Y ahora vamos a sacar el objeto fucero del _create_
+
+```diff
+type StoreCreator = StateCreator<Store, [["zustand/immer", never]], []>;
+
++ const store: StoreCreator = (set) => ({
++  counter: {
++    id: "125-3434-3432",
++    alias: "Office",
++    count: 0,
++  },
++  increment: () =>
++    set((state) => ({
++      counter: { ...state.counter, count: state.counter.count + 1 },
++    })),
++  setAlias: (alias: string) =>
++    set((state) => ({ counter: { ...state.counter, alias } })),
++ });
+```
+
+Y ahora que lo la función create queda más simple:
+
+```diff
+export const useCounter = create<Store>(
+  immer(
+-  (set) => ({
+-  counter: {
+-    id: "125-3434-3432",
+-    alias: "Office",
+-    count: 0,
+-  },
+-  increment: () =>
+-    set((state) => ({
+-      counter: { ...state.counter, count: state.counter.count + 1 },
+-    })),
+-  setAlias: (alias: string) =>
+-    set((state) => ({ counter: { ...state.counter, alias } })),
+-})
++ store
+ )
+);
+```
+
+El código final tiene que quedar tal que así:
+
+**NO COPIAR Y PEGAR**
+
+```ts
+import { create, type StateCreator } from "zustand";
+import { immer } from "zustand/middleware/immer";
+
+interface Counter {
+  id: string;
+  alias: string;
+  count: number;
+}
+
+type Store = {
+  counter: Counter;
+  increment: () => void;
+  setAlias: (alias: string) => void;
+};
+
+// StateCreator<
+// T,            // el tipo de estado completo (tu store)
+// M,           // la lista de middlewares aplicados
+//  CustomSet,   // funciones personalizadas para set()
+// >
+type StoreCreator = StateCreator<Store, [["zustand/immer", never]], []>;
+
+const store: StoreCreator = (set) => ({
+  counter: {
+    id: "125-3434-3432",
+    alias: "Office",
+    count: 0,
+  },
+  increment: () =>
+    set((state) => ({
+      counter: { ...state.counter, count: state.counter.count + 1 },
+    })),
+  setAlias: (alias: string) =>
+    set((state) => ({ counter: { ...state.counter, alias } })),
+});
+
+export const useCounter = create<Store>()(immer(store));
+```
+
+Y ahora que tenemos immer por fin podemos dejar de usar el spread operator y directamente hacer actualizaciones mutables que immer se encarga de convertir en inmutables.
+
+```diff
+const store: StoreCreator = (set) => ({
+  counter: {
+    id: "125-3434-3432",
+    alias: "Office",
+    count: 0,
+  },
+  increment: () =>
+    set((state) =>
+-    ({
+-      counter: { ...state.counter, count: state.counter.count + 1 },
+-    })
++   {
++    state.counter.count += 1;
++   }
+    ),
+  setAlias: (alias: string) =>
+    set((state) =>
+-      (
+-      { counter: { ...state.counter, alias } }
+-      )
++      {
++      state.counter.alias = alias;
++      }
+    ),
+});
+```
 
 _./src/stores/counter.store.ts_
 
@@ -171,22 +347,6 @@ export const useCounter = create<Store>((set) => ({
 + setAlias: (alias: string) => set(produce((draft) => { draft.counter.alias = alias })),
 }));
 ```
-
-🔍 Cómo funciona:
-
-produce() recibe un callback con un draft, que es una copia mutable del estado.
-Modificamos el draft de forma mutable.
-Al finalizar, immer se encarga de generar una versión inmutable del estado actualizado.
-
-🔹 Ventajas de immer
-
-✅ Nos permite actualizar el estado de manera más limpia y legible.
-✅ Evita que tengamos que hacer spreads manuales en múltiples niveles de anidamiento.
-✅ Apenas tiene impacto en rendimiento y es fácil de integrar con Zustand.
-
-Esta librería no tiene que ver con Zustand, la puedes usar en cualquier parte de tu código, pero en este caso nos viene de perlas para trabajar con objetos anidados.
-
-## Resumen
 
 🔹 Zustand maneja la inmutabilidad en el primer nivel, pero si trabajamos con objetos anidados, necesitamos hacer spreads manuales o usar una herramienta como immer.
 

@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import { produce } from "immer";
+import { create, type StateCreator } from "zustand";
+import { immer } from "zustand/middleware/immer";
 
 interface Counter {
   id: string;
@@ -13,22 +13,27 @@ type Store = {
   setAlias: (alias: string) => void;
 };
 
-export const useCounter = create<Store>((set) => ({
+// StateCreator<
+// T,            // el tipo de estado completo (tu store)
+// M,           // la lista de middlewares aplicados
+//  CustomSet,   // funciones personalizadas para set()
+// >
+type StoreCreator = StateCreator<Store, [["zustand/immer", never]], []>;
+
+const store: StoreCreator = (set) => ({
   counter: {
     id: "125-3434-3432",
     alias: "Office",
     count: 0,
   },
   increment: () =>
-    set(
-      produce((draft) => {
-        draft.counter.count += 1;
-      })
-    ),
+    set((state) => {
+      state.counter.count += 1;
+    }),
   setAlias: (alias: string) =>
-    set(
-      produce((draft) => {
-        draft.counter.alias = alias;
-      })
-    ),
-}));
+    set((state) => {
+      state.counter.alias = alias;
+    }),
+});
+
+export const useCounter = create<Store>()(immer(store));

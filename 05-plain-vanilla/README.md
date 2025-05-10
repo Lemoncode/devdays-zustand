@@ -14,6 +14,7 @@ _./src/components/counter.utils.ts_
 import { useCounter } from "../stores/counter.store";
 
 export const increment = () => {
+  // Ojo, fijate en getState :)
   useCounter.getState().increment();
 };
 ```
@@ -23,7 +24,7 @@ Vamos ahora a usarlo en nuetros componente:
 _./src/counter-increment.component.tsx_
 
 ```diff
-import { useCounter } from "../stores/counter.store";
+-import { useCounter } from "../stores/counter.store";
 + import { increment } from "./counter.utils";
 
 export function CounterIncrement() {
@@ -81,7 +82,9 @@ export function CounterDisplay() {
 }
 ```
 
-¿Por qué esto no va? Porque cuando leemos un valor desde fuera de un componente se lee el que tiene en ese momento y no se vuelve a ejecutar, es decir no se suscrbe a los cmabios y nos da una foto estática, no hay rerender porque no hay subscripción.
+Si ejecutamos y le damos a increment... ÑOOOOC
+
+¿Por qué esto no va? Porque cuando leemos un valor desde fuera de un componente se lee el que tiene en ese momento y no se vuelve a ejecutar, es decir no se suscrbe a los cambios y nos da una foto estática, no hay rerender porque no hay subscripción.
 
 Y ahora estarás pensando ¿Y para que narices quiero esto? me puede valer para:
 
@@ -89,7 +92,7 @@ Y ahora estarás pensando ¿Y para que narices quiero esto? me puede valer para:
 - Eventos globales (window, setInterval).
 - Lógica de redireccionamento.
 
-De hecho vamos a jugar un poco con esto:
+De hecho vamos a jugar un poco con esto (abre la consola de las devtools del navegador):
 
 _./src/components/counter.utils.ts_
 
@@ -138,12 +141,12 @@ export const getCount = () => {
 _./src/components/counter.utils.ts_
 
 ```diff
-useCounter.subscribe((state) => {
-  console.log('Counter changed to', state.counter.count)
-});
++ useCounter.subscribe((state) => {
++  console.log('Counter changed to', state.counter.count)
++ });
 ```
 
-Y para terminar, vamos a despertar a la bicha... Zustand soporta middlewares, y como muestra... vamos a meter Zustand en las redux devtools :).
+Y para terminar, vamos a despertar a la bicha... ya hemos visto que Zustand soporta middlewares, y... vamos a meter Zustand en las redux devtools :).
 
 Lo primero dejamos el display como estaba antes para que se vean los cambios, lo reemplazamos por la versión anterior
 
@@ -172,6 +175,65 @@ export function CounterDisplay() {
 ```
 
 Vamos a nuestro store y usamos el middleware de devtools que trae Zustand.
+
+Lo primero lo importamos:
+
+_./src/stores/counter.store.ts_
+
+```diff
+import { create, type StateCreator } from "zustand";
+import { immer } from "zustand/middleware/immer";
++ import { devtools } from "zustand/middleware";
+```
+
+Lo segundo, actualizamos los tipos para indicarle que vamos a tener este middleware:
+
+```diff
+// StateCreator<
+// T,            // el tipo de estado completo (tu store)
+// M,           // la lista de middlewares aplicados
+//  CustomSet,   // funciones personalizadas para set()
+// >
+type StoreCreator = StateCreator<Store, [
+  ["zustand/immer", never],
++ ["zustand/devtools", never]
+], []>;
+```
+
+Y ahora actualizamos el _create<Store>_ para que use el middleware de devtools:
+
+```diff
+export const useCounter = create<Store>()(
++ devtools(
+    immer(store),
++    {name: "counter-store"} // Le damos un nombre único al store
++ ),
+);
+```
+
+Y a cada acción le vamos a dar un nombre para que se vea en las devtools:
+
+```diff
+const store: StoreCreator = (set) => ({
+  counter: {
+    id: "125-3434-3432",
+    alias: "Office",
+    count: 0,
+  },
+  increment: () =>
+    set((state) => {
+      state.counter.count += 1;
+    }),
+  setAlias: (alias: string) =>
+    set((state) => {
+      state.counter.alias = alias;
+    }),
+});
+```
+
+Vamos a probar..., F12 y mostramos las redux dev tools
+
+---
 
 _./src/stores/counter.store.ts_
 
@@ -205,13 +267,18 @@ type Store = {
       set(
         produce((draft) => {
           draft.counter.count += 1;
-        })
+        }),
++      false,
++      "counter/increment"
       ),
     setAlias: (alias: string) =>
       set(
         produce((draft) => {
           draft.counter.alias = alias;
-        })
+        }),
++      false,
++      "counter/alias"
+
       ),
   })
 + ,{
@@ -220,37 +287,4 @@ type Store = {
 );
 ```
 
-Si te fijas nos sale la parte de acciones como "anonymous", y esto lo podemos cambiar, en el set podemos darle el nombre de la acción.
-
-_./src/stores/counter.store.ts_
-
-```diff
-export const useCounter = create(
-  devtools<Store>(
-    (set) => ({
-      counter: {
-        id: "125-3434-3432",
-        alias: "Office",
-        count: 0,
-      },
-      increment: () =>
-        set(
-          produce((draft) => {
-            draft.counter.count += 1;
--          })
-+          }, "counter/increment")
-        ),
-      setAlias: (alias: string) =>
-        set(
-          produce((draft) => {
-            draft.counter.alias = alias;
--          })
-+          }, "counter/setAlias")
-        ),
-    }),
-    { name: "counter-store" }
-  )
-);
-```
-
-https://stackoverflow.com/questions/76929920/how-to-access-zustand-store-outside-a-functional-component
+Vamos a ejecutra, F12 y mostramos las redux devtools :).
