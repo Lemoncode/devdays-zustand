@@ -19,7 +19,7 @@ export const increment = () => {
 };
 ```
 
-Vamos ahora a usarlo en nuetros componente:
+Vamos ahora a usarlo en nuestro componente:
 
 _./src/counter-increment.component.tsx_
 
@@ -223,68 +223,19 @@ const store: StoreCreator = (set) => ({
   increment: () =>
     set((state) => {
       state.counter.count += 1;
-    }),
+    },
++ false,
++ "counter/increment" // Nombre de la acción
+    ),
   setAlias: (alias: string) =>
     set((state) => {
       state.counter.alias = alias;
-    }),
+    },
++    false,
++    "counter/alias" // Nombre de la acción
+    ),
 });
 ```
 
 Vamos a probar..., F12 y mostramos las redux dev tools
 
----
-
-_./src/stores/counter.store.ts_
-
-```diff
-import { create } from "zustand";
-import { produce } from "immer";
-+ import { devtools } from "zustand/middleware";
-
-interface Counter {
-  id: string;
-  alias: string;
-  count: number;
-}
-
-type Store = {
-  counter: Counter;
-  increment: () => void;
-  setAlias: (alias: string) => void;
-};
-
-- export const useCounter = create<Store>(
-+  export const useCounter = create(
-+ devtools<Store>(
-    (set) => ({
-    counter: {
-      id: "125-3434-3432",
-      alias: "Office",
-      count: 0,
-    },
-    increment: () =>
-      set(
-        produce((draft) => {
-          draft.counter.count += 1;
-        }),
-+      false,
-+      "counter/increment"
-      ),
-    setAlias: (alias: string) =>
-      set(
-        produce((draft) => {
-          draft.counter.alias = alias;
-        }),
-+      false,
-+      "counter/alias"
-
-      ),
-  })
-+ ,{
-+    name: "counter-store", // unique name
-+  } )
-);
-```
-
-Vamos a ejecutra, F12 y mostramos las redux devtools :).
