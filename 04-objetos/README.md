@@ -118,6 +118,8 @@ Estamos accediendo a state.counter.alias en lugar de state.alias.
 
 También podríamos haber tomado directamente counter y acceder a sus propiedades desde el componente.
 
+> OJO Opcion dos, destructuring y usar counter
+
 _./src/components/counter-edit-alias.component.tsx_
 
 ```diff
@@ -191,7 +193,7 @@ Aquí tenemos dos problemas:
 
 Vamos a arreglaro esto:
 
-Por un lado añdimos crear el tipado del store usando la función de Zustand _createStore_:
+Por un lado añadimos crear el tipado del store usando la función de Zustand _createStore_:
 
 _./src/stores/counter.store.ts_
 
@@ -232,8 +234,11 @@ type StoreCreator = StateCreator<Store, [["zustand/immer", never]], []>;
 
 Y ahora que lo la función create queda más simple:
 
+> ¡¡ OJO LA FUNCION PASA A ESTAR CURRIFICADA !!
+
 ```diff
-export const useCounter = create<Store>(
+- export const useCounter = create<Store>(
++ export const useCounter = create<Store>()(
   immer(
 -  (set) => ({
 -  counter: {
@@ -325,27 +330,6 @@ const store: StoreCreator = (set) => ({
 +      }
     ),
 });
-```
-
-_./src/stores/counter.store.ts_
-
-```diff
-import { create } from "zustand";
-+ import {produce} from "immer";
-
-// (...)
-
-export const useCounter = create<Store>((set) => ({
-  counter: {
-    id: "125-3434-3432",
-    alias: "Office",
-    count: 0,
-  },
--  inc: () => set((state) => ({ counter: { ...state.counter, count: state.counter.count + 1 } })),
-+  increment: () => set(produce((draft) => { draft.counter.count += 1 })),
--  setAlias: (alias: string) => set({ counter: { ...state.counter, alias } }),
-+ setAlias: (alias: string) => set(produce((draft) => { draft.counter.alias = alias })),
-}));
 ```
 
 🔹 Zustand maneja la inmutabilidad en el primer nivel, pero si trabajamos con objetos anidados, necesitamos hacer spreads manuales o usar una herramienta como immer.

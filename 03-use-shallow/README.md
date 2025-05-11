@@ -1,10 +1,10 @@
 # 03 UseShallow
 
-Vamos a profundizar en el uso de selectores.
+Vamos a empezar a hilar fino y ver como usar selectores para tener un mejor rendimiento.
 
 ## El ejemplo
 
-Sigamos con nuestro ejemplo del contador. Imagina que estamos trabajando con un contador de consumo eléctrico o cualquier otro dispositivo IoT. Cada dispositivo tiene un número de serie (lo llamaremos `id`), y también añadimos un campos adicional que llamaremos `alias` para permitir que el usuario le asigne un nombre amigable dicho contandor.
+Seguimos con el ejemplo del contador. Imagina que estamos trabajando con un contador de consumo eléctrico o cualquier otro dispositivo IoT. Cada dispositivo tiene un número de serie (lo llamaremos `id`), y también añadimos un campos adicional que llamaremos `alias`.
 
 A nivel de store, la estructura quedaría así:
 
@@ -42,7 +42,7 @@ _./src/components/counter-edit-alias.component.tsx_
 import { useCounter } from "../stores/counter.store";
 
 export const CounterEditAliasComponent = () => {
-  // EY no está optimziado, ¿Te ánimas luego a optimizarlo?
+  // EY no está optimizado, ¿Te ánimas luego a optimizarlo?
   const { alias, setAlias } = useCounter();
 
   return (
@@ -136,7 +136,7 @@ export function CounterDisplay() {
 }
 ```
 
-Si ahora ejecutamos y cambiamos el alias, vemos que `CounterDisplay` se renderiza innecesariamente.
+Si ahora ejecutamos y **CAMBIAMOS EL ALIAS**, vemos que `CounterDisplay` se renderiza innecesariamente.
 
 ¿Cómo podemos optimizar esto? Veamos que opciones tenemos disponibles:
 

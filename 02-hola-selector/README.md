@@ -18,6 +18,8 @@ export function CounterDisplay() {
 }
 ```
 
+Y otro en el increment
+
 _./src/components/counter-increment.component.tsx_
 
 ```diff

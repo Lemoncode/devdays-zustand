@@ -10,6 +10,12 @@ Lo pirmero, instalar la libreria (que por cierto pesa 588 bytes gzipeado)
 npm install zustand
 ```
 
+Arrancamos la aplicación
+
+```bash
+npm run dev
+```
+
 Y vamos a crear una carpeta stores donde vamos a poner nuestros almacenes de datos.
 
 _./src/stores/counter.store.ts_
@@ -22,6 +28,9 @@ type Store = {
   increment: () => void;
 };
 
+// Si usas createStore puedes crear el store de zustand
+// en plain vanilla JS
+// https://zustand.docs.pmnd.rs/apis/create-store
 export const useCounter = create<Store>((set) => ({
   count: 0,
   increment: () => set((state) => ({ count: state.count + 1 })),
@@ -45,6 +54,8 @@ export function CounterDisplay() {
   return <h2>Current value: {count}</h2>;
 }
 ```
+
+Vamos a por el otro:
 
 _./src/components/counter-increment.component.tsx_
 
