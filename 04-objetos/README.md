@@ -153,6 +153,10 @@ Lo primero instalar la librería _immer_:
 npm install immer
 ```
 
+```bash
+npm run dev
+```
+
 En el store nos vamos a importar el middleware de immer:
 
 _./src/stores/counter.store.ts_
