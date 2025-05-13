@@ -1,6 +1,6 @@
 # 03 UseShallow
 
-Vamos a empezar a hilar fino y ver como usar selectores para tener un mejor rendimiento.
+Vamos a empezar a hilar fino y ver como optimizar el rendering con selectores en casos más complejos.
 
 ## El ejemplo
 

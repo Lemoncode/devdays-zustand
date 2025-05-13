@@ -212,7 +212,7 @@ type Store = {
 + type StoreCreator = StateCreator<Store, [["zustand/immer", never]], []>;
 ```
 
-Y ahora vamos a sacar el objeto fucero del _create_
+Y ahora vamos a sacar el objeto fuera del _create_
 
 ```diff
 type StoreCreator = StateCreator<Store, [["zustand/immer", never]], []>;

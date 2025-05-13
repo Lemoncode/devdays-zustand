@@ -1,10 +1,10 @@
 # Hola Zustand
 
-Vamos a crear un proyecto sencillo que nos sirve de vehículo para aprender como funciona Zustand.
+Vamos a crear un proyecto sencillo que nos sirva de vehículo para aprender como funciona Zustand.
 
 ## Pasos
 
-Lo pirmero, instalar la libreria (que por cierto pesa 588 bytes gzipeado)
+Lo primero, instalar la libreria (que por cierto pesa 588 bytes gzipeada)
 
 ```bash
 npm install zustand
